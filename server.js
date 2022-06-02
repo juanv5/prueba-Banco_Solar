@@ -22,24 +22,43 @@ http
 
 
 
-
+        // metodo POST para recibir los datos de cada nuevo usuario almacenado en PostgreSQL
 
 
         if ((req.url == "/usuarios" && req.method == "POST")) {
             //res.setHeader('Content-Type', 'application/json')   ////consulta ????
             let body = ""
             req.on("data", (chunk) => {
-                body += chunk;
+                body += chunk.toString();
             });
             req.on("end", async() => {
-                const datos = Object.values(JSON.parse(body))
-                const respuesta = await insertar(datos)
-                res.end(JSON.stringify(respuesta));
+                const datos = JSON.parse(body)
+                try {
+                    const respuesta = await insertar(datos)
+                    res.statusCode = 201
+                    res.end(JSON.stringify(respuesta));
+                } catch (error) {
+                    res.statusCode = 500
+                    res.end("Ocurrio un problema en el servidor..." + error)
+                }
             })
         }
 
 
-        if ((req.url == "/usuarios" && req.method == "GET")) {}
+        // metodo GET para devolver los usuarios registrados con sus balances
+
+
+
+        if (req.url == "/usuarios" && req.method == "GET") {
+            try {
+                const resultado = await consultar()
+                res.statusCode = 201
+                res.end(JSON.stringify(resultado))
+            } catch (error) {
+                res.statusCode = 500
+                res.end("Ocurrio un problema en el servidor..." + error)
+            }
+        }
 
 
 

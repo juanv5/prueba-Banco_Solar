@@ -23,4 +23,8 @@ SELECT * FROM usuarios;
 
 SELECT * FROM transferencias;
 
+INSERT INTO usuarios (nombre, balance) VALUES ('luis', 13000);
+INSERT INTO usuarios (nombre, balance) VALUES ('andres', 5000);
 
+INSERT INTO transferencias (emisor, receptor,monto) VALUES (1,2,1000);
+INSERT INTO transferencias (emisor, receptor,monto, fecha) VALUES (1,2,1000, NOW());
