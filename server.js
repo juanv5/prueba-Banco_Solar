@@ -1,11 +1,11 @@
 const http = require("http")
-const { insertar, consultar, modificar, eliminar, nuevaTransferencia, verTransferencias } = require("./consultas")
+const { insertar, consultar, modificar, eliminar, realizarTransferencia, verTransferencias } = require("./consultas")
 const fs = require("fs")
 const url = require("url")
 
 http
     .createServer(async(req, res) => {
-        if (req.url == "/" && req.method === "GET") {
+        if (req.url == "/" && req.method == "GET") {
             try {
                 // Paso 3
                 res.setHeader("content-type", "text/html")
@@ -21,22 +21,19 @@ http
         }
 
 
-
         // metodo POST para recibir los datos de cada nuevo usuario almacenado en PostgreSQL
-
-
-        if ((req.url == "/usuarios" && req.method == "POST")) {
-            //res.setHeader('Content-Type', 'application/json')   ////consulta ????
+        if ((req.url == "/usuario" && req.method == "POST")) {
+            //res.setHeader('Content-Type', 'application/json') ////consulta ????
             let body = ""
             req.on("data", (chunk) => {
-                body += chunk.toString();
+                body += chunk
             });
             req.on("end", async() => {
                 const datos = JSON.parse(body)
                 try {
                     const respuesta = await insertar(datos)
                     res.statusCode = 201
-                    res.end(JSON.stringify(respuesta));
+                    res.end(JSON.stringify(respuesta))
                 } catch (error) {
                     res.statusCode = 500
                     res.end("Ocurrio un problema en el servidor..." + error)
@@ -44,55 +41,77 @@ http
             })
         }
 
-
         // metodo GET para devolver los usuarios registrados con sus balances
-
-
-
         if (req.url == "/usuarios" && req.method == "GET") {
             try {
-                const resultado = await consultar()
+                const registros = await consultar()
                 res.statusCode = 201
-                res.end(JSON.stringify(resultado))
+                res.end(JSON.stringify(registros))
             } catch (error) {
                 res.statusCode = 500
                 res.end("Ocurrio un problema en el servidor..." + error)
             }
         }
 
-
-
-
-
-
-        if ((req.url == "/usuarios" && req.method == "PUT")) {
-
-            let body = "";
+        if ((req.url.startsWith('/usuario?') && req.method == "PUT")) {
+            //const { id } = url.parse(req.url, true).query
+            let body = ""
             req.on("data", (chunk) => {
-                body += chunk;
+                body += chunk
             });
             req.on("end", async() => {
-                const datos = Object.values(JSON.parse(body));
-                // Paso 2
-                const respuesta = await editar(datos);
-                res.end(JSON.stringify(respuesta));
+                const datos = Object.values(JSON.parse(body))
+                    // Paso 2
+                const respuesta = await modificar(datos)
+                res.end(JSON.stringify(respuesta))
             });
         }
 
+        if (req.url.startsWith('/usuario?') && req.method == "DELETE") {
+            const { id } = url.parse(req.url, true).query
 
+            try {
+                const resultado = await eliminar(id)
+                res.statusCode = 201;
+                res.end(JSON.stringify(resultado.rows))
+            } catch (error) {
+                res.statusCode = 500
 
+                console.log(error.code)
+                return error
+            }
+        }
 
-        if (req.url == "/usuarios" && req.method == "DELETE") {}
+        if ((req.url == "/transferencia" && req.method == "POST")) {
 
+            let body = ""
+            req.on("data", (chunk) => {
+                body += chunk
+            });
 
+            req.on("end", async() => {
+                const datos = Object.values(JSON.parse(body)) //////// consultar
+                try {
+                    const respuesta = await realizarTransferencia(datos)
+                    res.statusCode = 201
+                    res.end(JSON.stringify(respuesta))
+                } catch (error) {
+                    res.statusCode = 500
+                    console.log(error.code)
+                    return error
+                }
+            });
+        }
 
-        if ((req.url == "/transferencias" && req.method == "POST")) {}
-
-
-
-        if ((req.url == "/transferencias" && req.method == "GET")) {}
-
-
-
+        if ((req.url == "/transferencias" && req.method == "GET")) {
+            try {
+                const registros = await verTransferencias()
+                res.statusCode = 201
+                res.end(JSON.stringify(registros))
+            } catch (error) {
+                res.statusCode = 500
+                console.log(error.code)
+            }
+        }
     })
     .listen(3000);
